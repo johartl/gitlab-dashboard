@@ -1,0 +1,558 @@
+$fa-font-path: '../../node_modules/font-awesome/fonts';
+@import "../../node_modules/font-awesome/scss/font-awesome";
+@import "../../node_modules/rangeslider-pure/dist/rangeSlider.min.css";
+
+@import "loading-indicator";
+@import "running-indicator";
+@import "toggle";
+
+$status_failed: #c14345;
+$status_success: #358454;
+$status_skipped: #828282;
+$status_running: #247175;
+$status_canceled: #000000;
+$status_pending: #c36639;
+
+html {
+  font-size: 16px;
+}
+
+@media only screen and (max-width: 500px) {
+  html {
+    font-size: 14px;
+  }
+}
+
+@media only screen and (min-width: 500px) and (max-width: 900px) {
+  html {
+    font-size: 15px;
+  }
+}
+
+body {
+  background-color: #2d343a;
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  font-family: 'Roboto', sans-serif;
+}
+
+#app {
+  width: 100%;
+  min-height: 100vh;
+
+  a {
+    text-decoration: inherit;
+    color: inherit;
+  }
+
+  #content {
+    width: 100%;
+    min-height: 100vh;
+
+    &.loading {
+      filter: blur(3px) grayscale(0.4);
+    }
+  }
+
+  #content:before {
+    content: "";
+    position: fixed;
+    left: 0;
+    right: 0;
+    z-index: -1;
+    width: 100%;
+    height: 100%;
+
+    display: block;
+    background-image: url('/bg.jpg');
+    background-repeat: no-repeat;
+    background-size: cover;
+    filter: blur(2px) grayscale(0.55);
+  }
+}
+
+.project {
+  margin-bottom: 15px;
+
+  .project-name {
+    padding: 6px;
+    font-size: 1.25rem;
+    font-weight: bold;
+    text-align: center;
+    background: rgba(41, 111, 108, 0.4);
+    color: white;
+  }
+}
+
+.branch-list {
+  padding: 4px;
+  column-gap: 0;
+  -moz-column-gap: 0;
+  -webkit-column-gap: 0;
+
+  .branch {
+    padding: 8px;
+    break-inside: avoid-column;
+    page-break-inside: avoid;
+  }
+}
+
+.pipeline-history {
+  margin-top: 5px;
+
+  .ps-row {
+    color: white;
+    font-size: 0.95rem;
+    padding: 4px;
+    margin: 2px 0;
+    display: flex;
+    background: rgba(82, 90, 109, 0.5);
+    flex-wrap: wrap;
+    justify-content: space-between;
+
+    > * {
+      padding: 2px 4px;
+      align-self: center;
+    }
+
+    .ps-status {
+      @extend .status-color;
+      font-weight: bold;
+      text-transform: uppercase;
+      flex: 0 0 90px;
+      text-align: center;
+    }
+
+    .ps-commit-hash {
+      flex: 0 0 75px;
+      color: #c1c1c1;
+    }
+
+    .ps-user {
+      flex: 0 1 90px;
+      min-width: 60px;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+
+    .ps-date {
+      flex: 0 1 120px;
+      min-width: 100px;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+
+    .ps-commit-title {
+      flex: 2 1 200px;
+      overflow: hidden;
+      white-space: nowrap;
+      min-width: 100px;
+    }
+
+    .ps-stages {
+      flex: 1 2 auto;
+      display: flex;
+
+      .ps-stage {
+        @extend .status-background;
+        align-self: center;
+        text-align: center;
+        flex: 1 1 100px;
+        max-width: 180px;
+        padding: 1px 4px;
+        margin: 0 4px;
+      }
+    }
+  }
+}
+
+.pipeline {
+  padding: 2px;
+  background: rgba(82, 90, 109, 0.5);
+
+  &.status-failed {
+    background: rgba(189, 59, 59, 0.5)
+  }
+
+  .pipeline-header {
+    padding: 4px;
+    display: flex;
+    position: relative;
+    border-bottom: 1px outset #5f5f5f;
+    flex-wrap: wrap;
+
+    > * {
+      padding: 2px 4px;
+    }
+
+    .pipeline-tag {
+      display: inline-block;
+      font-size: 0.85rem;
+      color: white;
+      background: rgb(183, 41, 41);
+      border-radius: 6px;
+      font-weight: bold;
+      align-self: center;
+      flex: 0 0 auto;
+    }
+
+    .pipeline-ref {
+      flex: 0 0 auto;
+      color: #fbf6a6;
+      font-size: 1.6rem;
+      font-weight: bold;
+      display: inline-block;
+      align-self: center;
+    }
+
+    .pipeline-commit-title {
+      flex: 1 1 200px;
+      color: white;
+      display: inline-block;
+      font-size: 1.15rem;
+      align-self: center;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+
+    .pipeline-date {
+      color: #c1c1c1;
+      display: inline-block;
+      font-size: 1.15rem;
+      align-self: center;
+    }
+  }
+
+  .pipeline-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin: 0 2px;
+
+    .user-badge {
+      flex: 0 0 auto;
+      padding: 5px;
+      align-self: center;
+    }
+
+    .pipeline-info {
+      flex: 0.5 0 170px;
+      max-width: 200px;
+      align-self: center;
+      padding: 5px;
+
+      .pipeline-status {
+        @extend .status-color;
+        padding: 2px;
+        text-align: center;
+        font-weight: bold;
+        font-size: 1.6rem;
+        color: white;
+        text-transform: uppercase;
+      }
+
+      .pipeline-commit-hash {
+        text-align: center;
+        font-weight: bold;
+        font-size: 1.0rem;
+        color: #c1c1c1;
+        padding: 2px;
+      }
+    }
+
+    .stage-list {
+      flex: 1 1 auto;
+      display: flex;
+      flex-direction: row;
+      flex-wrap: wrap;
+
+      .no-pipelines-text {
+        color: #c1c1c1;
+        font-size: 1.1rem;
+        text-align: center;
+        align-self: center;
+        flex: 1;
+      }
+    }
+  }
+}
+
+.user-badge {
+  display: inline-block;
+  text-align: center;
+  margin-bottom: -18px;
+
+  img {
+    max-width: 75px;
+    border-radius: 50%;
+  }
+
+  .user-name {
+    color: white;
+    position: relative;
+    font-size: 0.9rem;
+    top: -18px;
+    background: rgba(50, 132, 124, 0.86);
+    border-radius: 7px;
+    padding: 2px 7px;
+  }
+}
+
+.stage {
+  background: rgba(183, 204, 199, 0.32);
+
+  flex: 1 1 120px;
+  max-width: 220px;
+  min-width: 80px;
+  margin: 6px;
+
+  .stage-info {
+    padding: 5px 8px;
+    color: white;
+
+    .stage-name {
+      font-weight: bold;
+      font-size: 1.15rem;
+    }
+  }
+
+  .build-list {
+    border-top: 1px outset #3c3c3c;
+    > .build:not(:last-child) {
+      border-bottom: 1px outset #3c3c3c;
+    }
+  }
+}
+
+.build {
+  @extend .status-background;
+  padding: 3px 4px;
+  color: rgba(255, 255, 255, 0.8);
+  display: flex;
+  position: relative;
+
+  .running-indicator {
+    padding: 0 4px 0 2px;
+    align-self: center;
+  }
+
+  .build-name {
+    flex: 1 1 100px;
+    font-size: 0.95rem;
+    padding: 0 3px;
+    align-self: center;
+  }
+
+  .build-duration {
+    flex: 0 1 auto;
+    font-size: 0.8rem;
+    text-align: right;
+    align-self: center;
+  }
+}
+
+.status-background {
+  &.status-failed {
+    background-color: $status_failed;
+  }
+  &.status-success {
+    background-color: $status_success;
+  }
+  &.status-skipped {
+    background-color: $status_skipped;
+    text-decoration: line-through;
+  }
+  &.status-running {
+    background-color: $status_running;
+  }
+  &.status-canceled {
+    background-color: $status_canceled;
+  }
+  &.status-pending {
+    background-color: $status_pending;
+  }
+}
+
+.status-color {
+  &.status-failed {
+    color: $status_failed;
+  }
+  &.status-success {
+    color: $status_success;
+  }
+  &.status-skipped {
+    color: $status_skipped;
+  }
+  &.status-running {
+    color: $status_running;
+  }
+  &.status-canceled {
+    color: $status_canceled;
+  }
+  &.status-pending {
+    color: $status_pending;
+  }
+}
+
+.button-menu {
+  position: fixed;
+  bottom: 8px;
+  right: 8px;
+
+  .fab-container {
+    padding: 5px;
+
+    &:hover .options-fab {
+      opacity: 1;
+    }
+
+    .options-fab {
+      font-size: 20px;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background-color: white;
+      opacity: 0.35;
+      padding: 5px;
+      text-align: center;
+      cursor: pointer;
+
+      i {
+        position: relative;
+        top: 3px;
+      }
+    }
+  }
+}
+
+.settings-menu {
+  display: inline-block;
+  position: absolute;
+  width: 280px;
+  background-color: rgba(255, 255, 255, 0.9);
+  right: 0;
+  bottom: 65px;
+  box-shadow: 0 0 8px 2px rgba(0, 0, 0, 0.75);
+
+  .settings-close {
+    font-size: 1rem;
+    position: absolute;
+    top: 0;
+    right: 4px;
+    padding: 4px;
+    color: #8a8a8a;
+    cursor: pointer;
+
+    &:hover {
+      color: black;
+    }
+  }
+
+  .settings-triangle {
+    position: absolute;
+    bottom: -12px;
+    right: 15px;
+    width: 0;
+    height: 0;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-top: 12px solid rgba(255, 255, 255, 0.9);
+    background: transparent;
+  }
+
+  .settings-item {
+    padding: 10px 12px;
+
+    &:not(:last-child) {
+      border-bottom: 1px inset #888888;
+    }
+
+    .settings-header {
+      font-weight: bold;
+      font-size: 0.95rem;
+      margin-bottom: 4px;
+    }
+
+    .settings-description {
+      font-size: 0.85rem;
+      color: #525252;
+      padding: 2px 0;
+    }
+
+    .settings-setter {
+      display: flex;
+      padding: 4px;
+      margin-top: 4px;
+      justify-content: space-between;
+
+      .settings-input-range {
+        width: 165px;
+        display: flex;
+
+        > * {
+          align-self: center;
+        }
+      }
+
+      .settings-input-toggle {
+        flex: 0 0 60px;
+      }
+
+      .settings-value {
+        flex: 0 0 auto;
+        padding: 2px 6px;
+        font-size: 0.95rem;
+        font-weight: bold;
+        color: white;
+        min-width: 26px;
+        border-radius: 12px;
+        background-color: #16a085;
+        text-align: center;
+        margin: 0 10px;
+      }
+
+    }
+  }
+
+  .rangeSlider {
+    height: 10px;
+  }
+
+  .rangeSlider__handle {
+    width: 20px;
+    height: 20px;
+    top: -6px;
+  }
+  .rangeSlider__fill {
+    height: 10px;
+  }
+}
+
+.loading-indicator {
+  position: absolute;
+  display: flex;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  flex-direction: column;
+  justify-content: center;
+  z-index: 1;
+
+  .message {
+    align-self: center;
+    margin-top: 15px;
+    font-size: calc(12px + 0.5vw + 0.5vh);
+    color: white;
+  }
+
+  .sk-folding-cube {
+    width: calc(60px + 0.5vw + 0.5vh);
+    height: calc(60px + 0.5vw + 0.5vh);
+  }
+
+  .sk-folding-cube .sk-cube:before {
+    background-color: white;
+  }
+}

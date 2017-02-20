@@ -1,0 +1,6 @@
+.*
+node_modules
+*.log
+/app-build
+/.babel-cache
+/config.js

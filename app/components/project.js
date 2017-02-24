@@ -8,8 +8,8 @@ Vue.component('project', {
                 <a v-bind:href="project.webUrl" target="_blank">{{ project.name }}</a>
             </div>
             <div class="branch-list" v-bind:style="columnStyle">
-                <branch v-for="[branch, pipelines] in branches"
-                    v-bind:branch="branch" v-bind:pipelines="pipelines">
+                <branch v-for="branch in branches"
+                    v-bind:branch="branch[0]" v-bind:pipelines="branch[1]">
                 </branch>
             </div>
         </div>

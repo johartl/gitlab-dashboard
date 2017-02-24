@@ -17,9 +17,9 @@ Vue.component('pipeline-history', {
                     <a v-bind:href="pipeline.webUrl" target="_blank">{{ pipeline.commitTitle }}</a>
                 </div>
                 <div class="ps-stages">
-                    <div v-for="[stage, builds] in pipeline.stages" class="ps-stage" 
-                        v-bind:class="'status-' + stageStatus(builds)">
-                        {{ stage }}
+                    <div v-for="stage in pipeline.stages" class="ps-stage" 
+                        v-bind:class="'status-' + stageStatus(stage[1])">
+                        {{ stage[0] }}
                     </div>
                 </div>
             </div>

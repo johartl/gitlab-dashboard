@@ -28,7 +28,7 @@ Vue.component('pipeline', {
                     <div class="pipeline-commit-hash">{{ pipeline.commitHash }}</div>
                 </div>
                 <div class="stage-list">
-                    <stage v-for="[stage, builds] in pipeline.stages" v-bind:stage="stage" v-bind:builds="builds"></stage>
+                    <stage v-for="stage in pipeline.stages" v-bind:stage="stage[0]" v-bind:builds="stage[1]"></stage>
                     <div v-if="pipeline.stages.length === 0" class="no-pipelines-text">
                         No pipeline information available
                     </div>

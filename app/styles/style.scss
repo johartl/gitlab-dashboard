@@ -13,6 +13,7 @@ $status_running: #247175;
 $status_canceled: #000000;
 $status_pending: #c36639;
 $status_created: #3a4e54;
+$status_manual: #3a4e54;
 
 html {
   font-size: 16px;
@@ -375,6 +376,9 @@ body {
   }
   &.status-created {
     background-color: $status_created;
+  }
+  &.status-manual {
+    background-color: $status_manual;
   }
 }
 

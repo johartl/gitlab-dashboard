@@ -38,6 +38,7 @@ Vue.component('pipeline-history', {
             let pending = false;
             let skipped = false;
             let created = false;
+            let manual = false;
 
             builds.forEach(build => {
                 failed |= build.status === 'failed';
@@ -47,10 +48,11 @@ Vue.component('pipeline-history', {
                 pending |= build.status === 'pending';
                 skipped |= build.status === 'skipped';
                 created |= build.status === 'created';
+                manual |= build.status === 'manual';
             });
 
             return failed ? 'failed' : canceled ? 'canceled' : success ? 'success' : running ? 'running' :
-                            pending ? 'pending' : skipped ? 'skipped' : created ? 'created' : 'unknown';
+                            pending ? 'pending' : skipped ? 'skipped' : created ? 'created' : manual ? 'manual' : 'unknown';
         },
         firstName: function (user) {
             return user.split(' ')[0];

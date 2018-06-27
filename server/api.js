@@ -23,13 +23,13 @@ class Api {
         if (typeof projectId === 'string') {
             projectId = encodeURIComponent(projectId);
         }
-        return this.get(`/api/v3/projects/${projectId}`);
+        return this.get(`/api/v4/projects/${projectId}`);
     }
 
     getBuilds(projectId, count = 100) {
         let promises = [];
         for (let page = 1; page <= Math.ceil(count / 100); page++) {
-            promises.push(this.get(`/api/v3/projects/${projectId}/builds?per_page=100&page=${page}`));
+            promises.push(this.get(`/api/v4/projects/${projectId}/jobs?per_page=100&page=${page}`));
         }
         return Promise.all(promises).then(this.mergeResponses);
     }
@@ -37,9 +37,13 @@ class Api {
     getPipelines(projectId, count = 100) {
         let promises = [];
         for (let page = 1; page <= Math.ceil(count / 100); page++) {
-            promises.push(this.get(`/api/v3/projects/${projectId}/pipelines?per_page=100&page=${page}`));
+            promises.push(this.get(`/api/v4/projects/${projectId}/pipelines?per_page=100&page=${page}`));
         }
         return Promise.all(promises).then(this.mergeResponses);
+    }
+
+    getPipeline(projectId, pipelineId) {
+        return this.get(`/api/v4/projects/${projectId}/pipelines/${pipelineId}`);
     }
 
     mergeResponses(responses) {

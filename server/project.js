@@ -9,6 +9,11 @@ class Project extends EventEmitter {
         this.config = config;
         this.project = null;
         this.branches = [];
+        this.pipelines = new Map();
+
+        // If the size of the pipeline exceeds the given threshold it will be reduced by half
+        this.maxPipelineCacheSize = 1000;
+        setInterval(this.cleanPipelineCache.bind(this), 30 * 1000);
     }
 
     initializeProject() {
@@ -35,10 +40,20 @@ class Project extends EventEmitter {
     }
 
     updatePipelines() {
-        return Promise.all([
-            this.provider.api.getPipelines(this.projectData.id, this.config.fetchPipelines || 100),
-            this.provider.api.getBuilds(this.projectData.id, this.config.fetchBuilds || 500)
-        ]).then(this.onUpdate.bind(this))
+        const fetchPipelines = this.provider.api.getPipelines(this.projectData.id, this.config.fetchPipelines || 100)
+            .then(pipelinesData => Promise.all(pipelinesData.map(({id: pipelineId, status}) => {
+                const pipeline = this.pipelines.get(pipelineId);
+                if (pipeline && pipeline.status === status) {
+                    return Promise.resolve(pipeline);
+                }
+                return this.provider.api.getPipeline(this.projectData.id, pipelineId).then(pipelineData => {
+                    this.pipelines.set(pipelineId, pipelineData);
+                    return pipelineData;
+                });
+            })));
+        const fetchBuilds = this.provider.api.getBuilds(this.projectData.id, this.config.fetchBuilds || 500);
+
+        return Promise.all([fetchPipelines, fetchBuilds]).then(this.onUpdate.bind(this));
     }
 
     onUpdate([pipelinesData, buildsData]) {
@@ -104,6 +119,17 @@ class Project extends EventEmitter {
         });
 
         this.project.branches = branches;
+    }
+
+    cleanPipelineCache() {
+        if (this.pipelines.size <= this.maxPipelineCacheSize) {
+            return;
+        }
+        const pipelineIds = this.pipelines.keys().sort((a, b) => a - b);
+        const deletePipelineIds = pipelineIds.slice(0, Math.ceil(this.maxPipelineCacheSize/2));
+        for (let pipelineId of deletePipelineIds) {
+            this.pipelines.delete(pipelineId);
+        }
     }
 }
 

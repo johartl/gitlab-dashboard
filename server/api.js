@@ -6,16 +6,43 @@ class Api {
         this.endpoint = config.gitlabEndpoint;
         this.token = config.gitlabToken;
         this.logger = logger;
+        this.requestQueue = [];
+        this.queueSpots = config.maxConcurrentApiRequests;
+    }
+
+    queueRequest(requestCall) {
+        return new Promise((resolve, reject) => {
+            const request = () => requestCall().then(resolve).catch(reject).finally(() => {
+                if (this.requestQueue.length > 0) {
+                    this.requestQueue.pop()();
+                } else if (this.queueSpots !== null) {
+                    this.queueSpots++;
+                }
+            });
+            if (this.queueSpots === null) {
+                request();
+            } else if (this.queueSpots > 0) {
+                this.queueSpots--;
+                request();
+            } else {
+                this.requestQueue.push(request);
+                if (this.requestQueue % 100 === 0) {
+                    this.logger.warn(`[provider] API request queue size: ${this.requestQueue.length}`);
+                }
+            }
+        });
     }
 
     get(uri) {
-        this.logger.debug(`[provider] GET ${uri}`);
-        return request({
-            uri: this.endpoint + uri,
-            json: true,
-            headers: {
-                'PRIVATE-TOKEN': this.token
-            }
+        return this.queueRequest(() => {
+            this.logger.debug(`[provider] GET ${uri}`);
+            return request({
+                uri: this.endpoint + uri,
+                json: true,
+                headers: {
+                    'PRIVATE-TOKEN': this.token
+                }
+            });
         }).catch(err => this.errorHandler(err));
     }
 

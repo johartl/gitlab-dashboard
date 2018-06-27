@@ -20,6 +20,7 @@ module.exports = {
         refreshInterval: 8000,
         fetchPipelines: 100,
         fetchBuilds: 500,
+        maxConcurrentApiRequests: 5,  // set to null to disable limit
 
         projects: [
             'group/project'

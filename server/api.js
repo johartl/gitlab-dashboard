@@ -7,7 +7,8 @@ class Api {
         this.token = config.gitlabToken;
         this.logger = logger;
         this.requestQueue = [];
-        this.queueSpots = config.maxConcurrentApiRequests;
+        this.active = 0;
+        this.max = config.maxConcurrentApiRequests;
     }
 
     queueRequest(requestCall) {
@@ -15,14 +16,14 @@ class Api {
             const request = () => requestCall().then(resolve).catch(reject).finally(() => {
                 if (this.requestQueue.length > 0) {
                     this.requestQueue.pop()();
-                } else if (this.queueSpots !== null) {
-                    this.queueSpots++;
+                } else {
+                    --this.active;
                 }
             });
-            if (this.queueSpots === null) {
+            if (!this.max) {
                 request();
-            } else if (this.queueSpots > 0) {
-                this.queueSpots--;
+            } else if (this.active < this.max) {
+                ++this.active;
                 request();
             } else {
                 this.requestQueue.push(request);
@@ -33,6 +34,11 @@ class Api {
         });
     }
 
+    errorHandler(err) {
+        this.logger.error(`[provider] ${err.message}`);
+        return Promise.reject(err);
+    }
+
     get(uri) {
         return this.queueRequest(() => {
             this.logger.debug(`[provider] GET ${uri}`);
@@ -41,45 +47,48 @@ class Api {
                 json: true,
                 headers: {
                     'PRIVATE-TOKEN': this.token
-                }
+                },
+                resolveWithFullResponse: true
             });
         }).catch(err => this.errorHandler(err));
+    }
+
+    getPaged(uri) {
+        const request = (page) => this.get(`${uri}per_page=100&page=${page}`);
+        return request(1).then(reply => {
+            const total = +reply.headers['x-total-pages'];
+            if (total === 1) return reply.body;
+            let promises = [];
+            for (let page = 2 ; page <= total ; ++page) promises.push(request(page));
+            return Promise.all(promises).then(replies => reply.body.concat(...replies.map(r => r.body)));
+        });
     }
 
     getProject(projectId) {
         if (typeof projectId === 'string') {
             projectId = encodeURIComponent(projectId);
         }
-        return this.get(`/api/v4/projects/${projectId}`);
+        return this.get(`/api/v4/projects/${projectId}`).then(x => x.body);
     }
 
-    getBuilds(projectId, count = 100) {
-        let promises = [];
-        for (let page = 1; page <= Math.ceil(count / 100); page++) {
-            promises.push(this.get(`/api/v4/projects/${projectId}/jobs?per_page=100&page=${page}`));
-        }
-        return Promise.all(promises).then(this.mergeResponses);
+    getBranches(projectId) {
+        return this.getPaged(`/api/v4/projects/${projectId}/repository/branches?`);
     }
 
-    getPipelines(projectId, count = 100) {
-        let promises = [];
-        for (let page = 1; page <= Math.ceil(count / 100); page++) {
-            promises.push(this.get(`/api/v4/projects/${projectId}/pipelines?per_page=100&page=${page}`));
-        }
-        return Promise.all(promises).then(this.mergeResponses);
+    getTags(projectId) {
+        return this.getPaged(`/api/v4/projects/${projectId}/repository/tags?`);
+    }
+
+    getPipelines(projectId, ref) {
+        return this.get(`/api/v4/projects/${projectId}/pipelines?ref=${ref}&per_page=16`).then(reply => reply.body);
     }
 
     getPipeline(projectId, pipelineId) {
-        return this.get(`/api/v4/projects/${projectId}/pipelines/${pipelineId}`);
+        return this.get(`/api/v4/projects/${projectId}/pipelines/${pipelineId}`).then(reply => reply.body);
     }
 
-    mergeResponses(responses) {
-        return [].concat(...responses);
-    }
-
-    errorHandler(err) {
-        this.logger.error(`[provider] ${err.message}`);
-        return Promise.reject(err);
+    getJobs(projectId, pipelineId) {
+        return this.get(`/api/v4/projects/${projectId}/pipelines/${pipelineId}/jobs`).then(reply => reply.body);
     }
 
 }

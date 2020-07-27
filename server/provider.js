@@ -14,12 +14,10 @@ class Provider {
 
     start() {
         this.logger.info('[provider] starting provider...');
-        this.projects = this.config.projects.map(projectId => new Project(this, projectId, this.config));
-
-        setInterval(this.refresh.bind(this), this.config.refreshInterval || 8000);
-        this.refresh();
-
+        this.projects = Object.keys(this.config.projects).map(
+            projectId => new Project(this, projectId, this.config, this.config.projects[projectId]));
         this.server.on('connection', this.onConnection.bind(this));
+        this.refresh();
     }
 
     stop() {
@@ -31,8 +29,10 @@ class Provider {
     }
 
     refresh() {
-        Promise.all(this.projects.map(project => project.refresh()))
-            .then(() => this.server.send(this.state));
+        Promise.all(this.projects.map(project => project.refresh())).then(() => {
+            this.server.send(this.state);
+            setTimeout(this.refresh.bind(this), this.config.refreshDelayMs || 10000);
+        });
     }
 
     get state() {

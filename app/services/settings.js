@@ -2,9 +2,9 @@ const SETTINGS_KEY = 'dashboard_settings';
 const SETTINGS_VERSION = '2017-02-18';
 
 const SETTINGS_DEFAULT = {
-    branchesCount: 8,
-    pipelineHistoryCount: 5,
-    includeLatestPipelineInHistory: true,
+    branchesCount: 4,
+    pipelineHistoryCount: 2,
+    includeLatestPipelineInHistory: false,
     columnCount: 1
 };
 

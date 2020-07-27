@@ -114,6 +114,8 @@ class Project extends EventEmitter {
             return [branch, branchesMap[branch]];
         });
 
+	branches = branches.filter(b => !b[0].startsWith('general/') && b[0] != 'master');
+
         branches.sort(([branchA, pipelinesA], [branchB, pipelinesB]) => {
             return pipelinesB[0].createdAt.getTime() - pipelinesA[0].createdAt.getTime();
         });

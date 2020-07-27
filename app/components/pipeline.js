@@ -18,14 +18,16 @@ Vue.component('pipeline', {
                 </div>
                 <div class="pipeline-date">{{ pipelineCreated }}</div>
             </div>
-            
+
             <div class="pipeline-row">
                 <user-badge v-bind:user="pipeline.user" v-bind:avatar="pipeline.userAvatar"></user-badge>
                 <div class="pipeline-info">
                     <div class="pipeline-status" v-bind:class="'status-' + pipeline.status">
                         {{ pipeline.status }}
                     </div>
-                    <div class="pipeline-commit-hash">{{ pipeline.commitHash }}</div>
+                    <div class="pipeline-commit-hash">
+                        <a v-bind:href="pipeline.webUrl" target="_blank">{{ pipeline.commitHash }}</a>
+                    </div>
                 </div>
                 <div class="stage-list">
                     <stage v-for="stage in pipeline.stages" v-bind:stage="stage[0]" v-bind:builds="stage[1]"></stage>

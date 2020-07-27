@@ -7,10 +7,12 @@ Vue.component('pipeline-history', {
     props: ['pipelines'],
     template: `
         <div class="pipeline-history">
-                
+
             <div v-for="pipeline in pipelines" class="ps-row">
                 <div class="ps-status" v-bind:class="'status-' + pipeline.status">{{ pipeline.status }}</div>
-                <div class="ps-commit-hash">{{ pipeline.commitHash }}</div>
+                <div class="ps-commit-hash">
+                    <a v-bind:href="pipeline.webUrl" target="_blank">{{ pipeline.commitHash }}</a>
+                </div>
                 <div class="ps-user">{{ firstName(pipeline.user) }}</div>
                 <div class="ps-date">{{ formatDate(pipeline.createdAt) }}</div>
                 <div class="ps-commit-title">

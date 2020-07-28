@@ -88,7 +88,7 @@ class Api {
     }
 
     getJobs(projectId, pipelineId) {
-        return this.get(`/api/v4/projects/${projectId}/pipelines/${pipelineId}/jobs`).then(reply => reply.body);
+        return this.getPaged(`/api/v4/projects/${projectId}/pipelines/${pipelineId}/jobs?`);
     }
 
 }

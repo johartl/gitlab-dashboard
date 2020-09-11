@@ -31,8 +31,12 @@ class Provider {
     refresh() {
         Promise.all(this.projects.map(project => project.refresh())).then(() => {
             this.server.send(this.state);
-            setTimeout(this.refresh.bind(this), this.config.refreshDelayMs || 10000);
-        });
+            this.delayedRefresh();
+        }, this.delayedRefresh.bind(this));
+    }
+
+    delayedRefresh() {
+        setTimeout(this.refresh.bind(this), this.config.refreshDelayMs || 10000);
     }
 
     get state() {

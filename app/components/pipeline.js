@@ -28,6 +28,9 @@ Vue.component('pipeline', {
                     <div class="pipeline-commit-hash">
                         <a v-bind:href="pipeline.webUrl" target="_blank">{{ pipeline.commitHash }}</a>
                     </div>
+                    <div v-if="pipeline.status === 'success'" class="pipeline-commit-hash">
+                        <img src="unicorn.gif" width="100" height="100">
+                    </div>
                 </div>
                 <div class="stage-list">
                     <stage v-for="stage in pipeline.stages" v-bind:stage="stage[0]" v-bind:builds="stage[1]"></stage>

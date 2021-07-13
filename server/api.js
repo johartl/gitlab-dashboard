@@ -54,14 +54,14 @@ class Api {
     }
 
     getPaged(uri) {
-        const request = (page) => this.get(`${uri}per_page=100&page=${page}`);
-        return request(1).then(reply => {
-            const total = +reply.headers['x-total-pages'];
-            if (total === 1) return reply.body;
-            let promises = [];
-            for (let page = 2 ; page <= total ; ++page) promises.push(request(page));
-            return Promise.all(promises).then(replies => reply.body.concat(...replies.map(r => r.body)));
+        const request = (page) => this.get(`${uri}per_page=100&page=${page}`).then(reply => {
+            if (reply.body.length > 0) {
+                return request(page + 1).then(reply2 => reply.body.concat(reply2));
+            } else {
+                return reply.body;
+            }
         });
+        return request(1);
     }
 
     getProject(projectId) {

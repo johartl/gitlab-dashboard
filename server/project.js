@@ -36,7 +36,10 @@ class Project extends EventEmitter {
         const fetchBranches = this.provider.api.getBranches(this.projectData.id);
         const fetchTags     = this.provider.api.getTags    (this.projectData.id);
         return Promise.all([fetchBranches, fetchTags]).then(([branches, tags]) => {
-            let refs = branches.map(e => [e.name, e.commit.committed_date]).concat(tags.map(e => [e.name, e.commit.committed_date]));
+            this.provider.logger.debug(`[project] ${this.project.name} - refi:`, branches.map(e => e.name).join(', '));
+            let refs =
+                branches.map(e => [e.name, e.commit.committed_date]).concat(
+                tags.map(e => [e.name, e.commit.committed_date]));
             refs = refs.filter(x => this.branchRegEx.test(x[0]));
             refs.sort((a, b) => new Date(b[1]) - new Date(a[1]));
             refs = refs.slice(0, 16).map(x => x[0]);

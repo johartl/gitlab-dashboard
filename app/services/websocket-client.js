@@ -5,7 +5,7 @@ export class WebSocketClient extends EventEmitter {
     constructor() {
         super();
         this.socket = null;
-        this.wsEndpoint = (location.protocol === 'https' ? 'wss://' : 'ws://') + location.host + '/ws';
+        this.wsEndpoint = (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws';
         this.connected = false;
     }
 

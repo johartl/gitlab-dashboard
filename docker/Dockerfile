@@ -9,6 +9,7 @@ RUN \
 		nodejs \
 		net-tools \
 		npm \
+		procps \
 	&& \
 	rm -rf /var/lib/apt/lists/*
 

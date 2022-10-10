@@ -22,3 +22,6 @@ RUN \
 EXPOSE 5000/tcp
 CMD ["bash", "-l"]
 ENTRYPOINT ["./start.js"]
+
+# docker build -t dashboard .
+# docker run -d --restart unless-stopped -v $(pwd)/config.js:/dashboard/config.js -p 5000:5000 --name dashboard dashboard

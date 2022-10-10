@@ -79,6 +79,10 @@ class Api {
         return this.getPaged(`/api/v4/projects/${projectId}/repository/tags?`);
     }
 
+    getMergeRequests(projectId) {
+        return this.getPaged(`/api/v4/projects/${projectId}/merge_requests?`);
+    }
+
     getPipelines(projectId, ref) {
         return this.get(`/api/v4/projects/${projectId}/pipelines?ref=${ref}&per_page=16`).then(reply => reply.body);
     }

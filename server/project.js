@@ -33,39 +33,64 @@ class Project extends EventEmitter {
     }
 
     updateRefs() {
-        const fetchBranches = this.provider.api.getBranches(this.projectData.id);
-        const fetchTags     = this.provider.api.getTags    (this.projectData.id);
-        return Promise.all([fetchBranches, fetchTags]).then(([branches, tags]) => {
-            this.provider.logger.debug(`[project] ${this.project.name} - refi:`, branches.map(e => e.name).join(', '));
-            let refs =
-                branches.map(e => [e.name, e.commit.committed_date]).concat(
-                tags.map(e => [e.name, e.commit.committed_date]));
+        const fetchBranches      = this.provider.api.getBranches     (this.projectData.id);
+        const fetchTags          = this.provider.api.getTags         (this.projectData.id);
+        const fetchMergeRequests = this.provider.api.getMergeRequests(this.projectData.id);
+        return Promise.all([fetchBranches, fetchTags, fetchMergeRequests]).then(([branches, tags, mergeRequests]) => {
+            let refs = Array.prototype.concat(
+                branches     .map(e => [e.name, e.commit.committed_date]),
+                tags         .map(e => [e.name, e.commit.committed_date]));
             refs = refs.filter(x => this.branchRegEx.test(x[0]));
             refs.sort((a, b) => new Date(b[1]) - new Date(a[1]));
-            refs = refs.slice(0, 16).map(x => x[0]);
-            this.provider.logger.debug(`[project] ${this.project.name} - refs:`, refs.join(', '));
+            refs = refs.slice(0, 16);
+
+            let mergeRefs = {};
+            mergeRequests.forEach(e => {
+                if (e.source_branch in mergeRefs) {
+                    mergeRefs[e.source_branch].push('refs/merge-requests/' + e.iid + '/head');
+                } else {
+                    mergeRefs[e.source_branch] = ['refs/merge-requests/' + e.iid + '/head'];
+                }
+            });
+
+            refs = refs.map(x => {
+                if (x[0] in mergeRefs) {
+                    return [x[0], mergeRefs[x[0]].concat(x[0])];
+                } else {
+                    return [x[0], [x[0]]];
+                }
+            });
+
+            this.provider.logger.debug(`[project] ${this.project.name} - refs:`, refs.map(x => x[1].join(', ')).join(', '));
             return this.updatePipelines(refs);
         });
    }
 
     updatePipelines(refs) {
         return Promise.all(refs.map(ref =>
-            this.provider.api.getPipelines(this.projectData.id, ref).then(pipelines =>
-                Promise.all(pipelines.map(pipeline =>
-                    Promise.all([
-                        this.provider.api.getPipeline(this.projectData.id, pipeline.id),
-                        this.provider.api.getJobs    (this.projectData.id, pipeline.id)
-                    ]).then(([pipelineData, jobs]) => this.reformatPipeline(pipelineData, jobs))
-                )).then(pipelines => [ref, pipelines])
-            )
+            Promise.all(ref[1].map(r =>
+                this.provider.api.getPipelines(this.projectData.id, r).then(pipelines =>
+                    Promise.all(pipelines.map(pipeline =>
+                        Promise.all([
+                            this.provider.api.getPipeline(this.projectData.id, pipeline.id),
+                            this.provider.api.getJobs    (this.projectData.id, pipeline.id)
+                        ]).then(([pipelineData, jobs]) => this.reformatPipeline(pipelineData, jobs, ref[0]))
+                    ))
+                )
+            )).then(pipelines => {
+                pipelines = pipelines.reduce((a, b) => a.concat(b), []);
+                pipelines.sort((a, b) => b.createdAt - a.createdAt);
+                pipelines = pipelines.slice(0, 16);
+                return [ref[0], pipelines];
+            })
         )).then(branches => {
             this.project.branches = branches.filter(b => b[1].length > 0);
         });
     }
 
-    reformatPipeline(pipelineData, jobs) {
+    reformatPipeline(pipelineData, jobs, ref) {
         let pipeline = {
-            ref:         pipelineData.ref,
+            ref:         ref,
             status:      pipelineData.status,
             tag:         pipelineData.tag,
             commitHash:  pipelineData.sha.substring(0, 8),

@@ -1,0 +1,11 @@
+version: '3.3'
+services:
+  dashboard:
+    container_name: dashboard
+    image: dashboard
+    hostname: "dashboard"
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    volumes:
+      - "./config.js:/dashboard/config.js"

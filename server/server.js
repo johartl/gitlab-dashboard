@@ -1,4 +1,5 @@
 const express = require('express');
+const basicAuth = require('express-basic-auth');
 const morgan = require('morgan');
 const compression = require('compression');
 const EventEmitter = require('tiny-emitter');
@@ -20,6 +21,16 @@ class Server extends EventEmitter {
         const app = express();
         this.server = http.createServer(app);
         this.wsServer = new WebSocketServer(this.server, this.logger);
+
+        // Authentication
+        if (this.config.user && this.config.password) {
+            let users = {};
+            users[this.config.user] = this.config.password;
+            app.use(basicAuth({
+                users: users,
+                challenge: true
+            }));
+        }
 
         // Set up HTTP request logging
         const logStream = {

@@ -10,7 +10,9 @@ module.exports = {
     },
     server: {
         port: '5000',
-        host: '0.0.0.0'
+        host: '0.0.0.0',
+        user: null,
+        password: null
     },
     provider: {
         gitlabEndpoint: 'http://gitlab.example.com',

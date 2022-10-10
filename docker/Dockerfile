@@ -1,5 +1,4 @@
-FROM debian:bullseye
-
+FROM debian:bullseye AS base
 RUN \
 	rm -rf /var/lib/apt/lists/* && \
 	DEBIAN_FRONTEND=noninteractive apt update && apt dist-upgrade && apt install -y \
@@ -13,16 +12,21 @@ RUN \
 	&& \
 	rm -rf /var/lib/apt/lists/*
 
-WORKDIR /dashboard
-
+FROM base AS build
+COPY app               /build/app
+COPY package.json      /build/
+COPY package-lock.json /build/
+COPY webpack.config.js /build/
 RUN \
-	git clone --depth 1 https://github.com/fishbach/gitlab-dashboard.git . && \
-	npm install && \
-	npm run build
+	cd /build && \
+	npm install
 
+FROM base
+COPY --from=build /build/node_modules /dashboard/node_modules
+COPY --from=build /build/app-build    /dashboard/app-build
+COPY server                           /dashboard/server
+COPY start.js                         /dashboard/
+
+WORKDIR /dashboard
 EXPOSE 5000/tcp
-CMD ["bash", "-l"]
 ENTRYPOINT ["./start.js"]
-
-# docker build -t dashboard .
-# docker run -d --restart unless-stopped -v $(pwd)/config.js:/dashboard/config.js -p 5000:5000 --name dashboard dashboard

@@ -2,13 +2,13 @@
 
 ## install
 
-* Create config.js from config.dist.js
+1. Create config.js from config.dist.js
 
-## direct run
+## direct start
 
-npm install
-./start.js
+npm install  
+./start.js  
 
-## docker
+## with docker
 
-docker-compose -f docker/docker-compose.yml up -d
+docker-compose -f docker/docker-compose.yml up -d  

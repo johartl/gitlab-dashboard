@@ -92,7 +92,7 @@ class Api {
     }
 
     getJobs(projectId, pipelineId) {
-        return this.getPaged(`/api/v4/projects/${projectId}/pipelines/${pipelineId}/jobs?`);
+        return this.getPaged(`/api/v4/projects/${projectId}/pipelines/${pipelineId}/jobs?include_retried=1&`);
     }
 
 }

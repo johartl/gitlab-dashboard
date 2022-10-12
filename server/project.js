@@ -123,7 +123,7 @@ class Project extends EventEmitter {
 
         pipeline.stages = Object.keys(stagesMap).map(stage => [stage, stagesMap[stage]]);
 
-        // remove duplicate jobs in stage
+        // calc stage ordering
         let stageCreatedAt = {};
         pipeline.stages.forEach(([stage, jobs]) => {
             let oldest = null;
@@ -131,14 +131,16 @@ class Project extends EventEmitter {
                 let createdAt = jobs[i].createdAt;
                 let name      = jobs[i].name;
                 if (!oldest || oldest > createdAt) oldest = createdAt;
-                for (let j = 0 ; j < i ; ++j) {
-                    if (jobs[j].name === name) {
-                        if (createdAt < jobs[j].createdAt) jobs.splice(i, 1);
-                        else                               jobs.splice(j, 1);
-                        --i;
-                        break;
-                    }
-                }
+
+                // remove duplicate jobs in stage
+//                for (let j = 0 ; j < i ; ++j) {
+//                    if (jobs[j].name === name) {
+//                        if (createdAt < jobs[j].createdAt) jobs.splice(i, 1);
+//                        else                               jobs.splice(j, 1);
+//                        --i;
+//                        break;
+//                    }
+//                }
             }
             jobs.sort((a, b) => a.name.localeCompare(b.name));
             stageCreatedAt[stage] = oldest;

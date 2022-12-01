@@ -67,7 +67,7 @@ module.exports = function(options = {}) {
         {from: path.resolve(appDir, 'index.html'), to: outputDir},
         {from: assetsDir, to: outputDir},
     ]));
-    config.plugins.push(new CleanWebpackPlugin([outputDir], {verbose: false}));
+    config.plugins.push(new CleanWebpackPlugin({verbose: false}));
 
     if (releaseEnv) {
         config.plugins.push(new DefinePlugin({

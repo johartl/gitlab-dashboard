@@ -7,22 +7,28 @@ class Api {
         this.token = config.gitlabToken;
         this.logger = logger;
         this.requestQueue = [];
-        this.queueSpots = config.maxConcurrentApiRequests;
+        this.active = 0;
+        this.max = config.maxConcurrentApiRequests;
+        this.requestDelayMs = config.requestDelayMs;
     }
 
     queueRequest(requestCall) {
         return new Promise((resolve, reject) => {
             const request = () => requestCall().then(resolve).catch(reject).finally(() => {
                 if (this.requestQueue.length > 0) {
-                    this.requestQueue.pop()();
-                } else if (this.queueSpots !== null) {
-                    this.queueSpots++;
+                    if (this.requestDelayMs > 0) {
+                        setTimeout(this.requestQueue.pop(), this.requestDelayMs);
+                    } else {
+                        this.requestQueue.pop()();
+                    }
+                } else {
+                    --this.active;
                 }
             });
-            if (this.queueSpots === null) {
+            if (!this.max) {
                 request();
-            } else if (this.queueSpots > 0) {
-                this.queueSpots--;
+            } else if (this.active < this.max) {
+                ++this.active;
                 request();
             } else {
                 this.requestQueue.push(request);
@@ -33,6 +39,11 @@ class Api {
         });
     }
 
+    errorHandler(err) {
+        this.logger.error(`[provider] ${err.message}`);
+        return Promise.reject(err);
+    }
+
     get(uri) {
         return this.queueRequest(() => {
             this.logger.debug(`[provider] GET ${uri}`);
@@ -41,45 +52,52 @@ class Api {
                 json: true,
                 headers: {
                     'PRIVATE-TOKEN': this.token
-                }
+                },
+                resolveWithFullResponse: true
             });
         }).catch(err => this.errorHandler(err));
+    }
+
+    getPaged(uri) {
+        const request = (page) => this.get(`${uri}per_page=100&page=${page}`).then(reply => {
+            if (reply.body.length > 0) {
+                return request(page + 1).then(reply2 => reply.body.concat(reply2));
+            } else {
+                return reply.body;
+            }
+        });
+        return request(1);
     }
 
     getProject(projectId) {
         if (typeof projectId === 'string') {
             projectId = encodeURIComponent(projectId);
         }
-        return this.get(`/api/v4/projects/${projectId}`);
+        return this.get(`/api/v4/projects/${projectId}`).then(x => x.body);
     }
 
-    getBuilds(projectId, count = 100) {
-        let promises = [];
-        for (let page = 1; page <= Math.ceil(count / 100); page++) {
-            promises.push(this.get(`/api/v4/projects/${projectId}/jobs?per_page=100&page=${page}`));
-        }
-        return Promise.all(promises).then(this.mergeResponses);
+    getBranches(projectId) {
+        return this.getPaged(`/api/v4/projects/${projectId}/repository/branches?`);
     }
 
-    getPipelines(projectId, count = 100) {
-        let promises = [];
-        for (let page = 1; page <= Math.ceil(count / 100); page++) {
-            promises.push(this.get(`/api/v4/projects/${projectId}/pipelines?per_page=100&page=${page}`));
-        }
-        return Promise.all(promises).then(this.mergeResponses);
+    getTags(projectId) {
+        return this.getPaged(`/api/v4/projects/${projectId}/repository/tags?`);
+    }
+
+    getMergeRequests(projectId) {
+        return this.getPaged(`/api/v4/projects/${projectId}/merge_requests?`);
+    }
+
+    getPipelines(projectId, ref) {
+        return this.get(`/api/v4/projects/${projectId}/pipelines?ref=${ref}&per_page=16`).then(reply => reply.body);
     }
 
     getPipeline(projectId, pipelineId) {
-        return this.get(`/api/v4/projects/${projectId}/pipelines/${pipelineId}`);
+        return this.get(`/api/v4/projects/${projectId}/pipelines/${pipelineId}`).then(reply => reply.body);
     }
 
-    mergeResponses(responses) {
-        return [].concat(...responses);
-    }
-
-    errorHandler(err) {
-        this.logger.error(`[provider] ${err.message}`);
-        return Promise.reject(err);
+    getJobs(projectId, pipelineId) {
+        return this.getPaged(`/api/v4/projects/${projectId}/pipelines/${pipelineId}/jobs?include_retried=1&`);
     }
 
 }

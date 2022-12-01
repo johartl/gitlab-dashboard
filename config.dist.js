@@ -8,22 +8,20 @@ module.exports = {
         colors: true,
         file: 'server.log'
     },
-
     server: {
         port: '5000',
-        host: '0.0.0.0'
+        host: '0.0.0.0',
+        user: null,
+        password: null
     },
-
     provider: {
         gitlabEndpoint: 'http://gitlab.example.com',
         gitlabToken: 'AccessTokenFromGitlab',
-        refreshInterval: 8000,
-        fetchPipelines: 100,
-        fetchBuilds: 500,
-        maxConcurrentApiRequests: 5,  // set to null to disable limit
-
-        projects: [
-            'group/project'
-        ]
+        refreshDelayMs: 10000,        // 10 sec
+        requestDelayMs: 0,            // delay between two requests
+        maxConcurrentApiRequests: 6,  // set to null to disable limit
+        projects: {
+            'group/project': /branch regex/
+        }
     }
 };

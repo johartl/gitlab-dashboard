@@ -9,13 +9,18 @@ class Api {
         this.requestQueue = [];
         this.active = 0;
         this.max = config.maxConcurrentApiRequests;
+        this.requestDelayMs = config.requestDelayMs;
     }
 
     queueRequest(requestCall) {
         return new Promise((resolve, reject) => {
             const request = () => requestCall().then(resolve).catch(reject).finally(() => {
                 if (this.requestQueue.length > 0) {
-                    this.requestQueue.pop()();
+                    if (this.requestDelayMs > 0) {
+                        setTimeout(this.requestQueue.pop(), this.requestDelayMs);
+                    } else {
+                        this.requestQueue.pop()();
+                    }
                 } else {
                     --this.active;
                 }

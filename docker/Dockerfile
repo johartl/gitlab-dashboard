@@ -1,7 +1,7 @@
 FROM debian:bullseye AS base
 RUN \
 	rm -rf /var/lib/apt/lists/* && \
-	DEBIAN_FRONTEND=noninteractive apt update && apt dist-upgrade && apt install -y \
+	apt update && apt dist-upgrade -y && apt install -y \
 		curl \
 		locales \
 		nano \
